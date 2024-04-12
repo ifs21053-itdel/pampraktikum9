@@ -1,7 +1,6 @@
 package com.ifs21053.delcomtodo.presentation
 
 import android.content.Context
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.ifs21053.delcomtodo.data.repository.AuthRepository
@@ -12,6 +11,7 @@ import com.ifs21053.delcomtodo.presentation.login.LoginViewModel
 import com.ifs21053.delcomtodo.presentation.main.MainViewModel
 import com.ifs21053.delcomtodo.presentation.profile.ProfileViewModel
 import com.ifs21053.delcomtodo.presentation.register.RegisterViewModel
+import com.ifs21053.delcomtodo.presentation.todo.TodoViewModel
 
 class ViewModelFactory(
     private val authRepository: AuthRepository,
@@ -31,11 +31,15 @@ class ViewModelFactory(
             }
             modelClass.isAssignableFrom(MainViewModel::class.java) -> {
                 MainViewModel
-                    .getInstance(authRepository) as T
+                    .getInstance(authRepository, todoRepository) as T
             }
             modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
                 ProfileViewModel
                     .getInstance(authRepository, userRepository) as T
+            }
+            modelClass.isAssignableFrom(TodoViewModel::class.java) -> {
+                TodoViewModel
+                    .getInstance(todoRepository) as T
             }
             else -> throw IllegalArgumentException(
                 "Unknown ViewModel class: " + modelClass.name
