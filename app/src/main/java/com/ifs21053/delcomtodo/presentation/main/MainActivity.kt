@@ -11,17 +11,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.ifs21053.delcomtodo.R
-import com.ifs21053.delcomtodo.adapter.TodosAdapter
 import com.ifs21053.delcomtodo.data.remote.response.DelcomTodosResponse
 import com.ifs21053.delcomtodo.data.remote.response.TodosItemResponse
+import com.ifs21053.delcomtodo.helper.Utils.Companion.observeOnce
+import com.ifs21053.delcomtodo.R
+import com.ifs21053.delcomtodo.adapter.TodosAdapter
 import com.ifs21053.delcomtodo.data.remote.retrofit.MyResult
 import com.ifs21053.delcomtodo.databinding.ActivityMainBinding
-import com.ifs21053.delcomtodo.helper.Utils.Companion.observeOnce
 import com.ifs21053.delcomtodo.presentation.ViewModelFactory
 import com.ifs21053.delcomtodo.presentation.login.LoginActivity
 import com.ifs21053.delcomtodo.presentation.profile.ProfileActivity
 import com.ifs21053.delcomtodo.presentation.todo.TodoDetailActivity
+import com.ifs21053.delcomtodo.presentation.todo.TodoFavoriteActivity
 import com.ifs21053.delcomtodo.presentation.todo.TodoManageActivity
 
 class MainActivity : AppCompatActivity() {
@@ -29,40 +30,49 @@ class MainActivity : AppCompatActivity() {
     private val viewModel by viewModels<MainViewModel> {
         ViewModelFactory.getInstance(this)
     }
+
     private val launcher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == TodoManageActivity.RESULT_CODE) {
             recreate()
         }
+
         if (result.resultCode == TodoDetailActivity.RESULT_CODE) {
             result.data?.let {
                 val isChanged = it.getBooleanExtra(
                     TodoDetailActivity.KEY_IS_CHANGED,
                     false
                 )
+
                 if (isChanged) {
                     recreate()
                 }
             }
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         setupView()
         setupAction()
     }
+
     private fun setupView() {
         showComponentNotEmpty(false)
         showEmptyError(false)
         showLoading(true)
+
         binding.appbarMain.overflowIcon =
             ContextCompat
                 .getDrawable(this, R.drawable.ic_more_vert_24)
+
         observeGetTodos()
     }
+
     private fun setupAction() {
         binding.appbarMain.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
@@ -70,17 +80,26 @@ class MainActivity : AppCompatActivity() {
                     openProfileActivity()
                     true
                 }
+
+                R.id.mainMenuFavoriteTodos -> {
+                    openFavoriteTodoActivity()
+                    true
+                }
+
                 R.id.mainMenuLogout -> {
                     viewModel.logout()
                     openLoginActivity()
                     true
                 }
+
                 else -> false
             }
         }
+
         binding.fabMainAddTodo.setOnClickListener {
             openAddTodoActivity()
         }
+
         viewModel.getSession().observe(this) { user ->
             if (!user.isLogin) {
                 openLoginActivity()
@@ -89,6 +108,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun observeGetTodos() {
         viewModel.getTodos().observe(this) { result ->
             if (result != null) {
@@ -96,10 +116,12 @@ class MainActivity : AppCompatActivity() {
                     is MyResult.Loading -> {
                         showLoading(true)
                     }
+
                     is MyResult.Success -> {
                         showLoading(false)
                         loadTodosToLayout(result.data)
                     }
+
                     is MyResult.Error -> {
                         showLoading(false)
                         showEmptyError(true)
@@ -108,6 +130,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun loadTodosToLayout(response: DelcomTodosResponse) {
         val todos = response.data.todos
         val layoutManager = LinearLayoutManager(this)
@@ -117,12 +140,14 @@ class MainActivity : AppCompatActivity() {
             layoutManager.orientation
         )
         binding.rvMainTodos.addItemDecoration(itemDecoration)
+
         if (todos.isEmpty()) {
             showEmptyError(true)
             binding.rvMainTodos.adapter = null
         } else {
             showComponentNotEmpty(true)
             showEmptyError(false)
+
             val adapter = TodosAdapter()
             adapter.submitOriginalList(todos)
             binding.rvMainTodos.adapter = adapter
@@ -132,6 +157,7 @@ class MainActivity : AppCompatActivity() {
                     isChecked: Boolean
                 ) {
                     adapter.filter(binding.svMain.query.toString())
+
                     viewModel.putTodo(
                         todo.id,
                         todo.title,
@@ -154,6 +180,7 @@ class MainActivity : AppCompatActivity() {
                                     ).show()
                                 }
                             }
+
                             is MyResult.Success -> {
                                 if (isChecked) {
                                     Toast.makeText(
@@ -169,10 +196,12 @@ class MainActivity : AppCompatActivity() {
                                     ).show()
                                 }
                             }
+
                             else -> {}
                         }
                     }
                 }
+
                 override fun onClickDetailListener(todoId: Int) {
                     val intent = Intent(
                         this@MainActivity,
@@ -182,13 +211,14 @@ class MainActivity : AppCompatActivity() {
                     launcher.launch(intent)
                 }
             })
+
             binding.svMain.setOnQueryTextListener(
                 object : SearchView.OnQueryTextListener {
                     override fun onQueryTextSubmit(query: String): Boolean {
                         return false
                     }
-                    override fun onQueryTextChange(newText: String): Boolean {
 
+                    override fun onQueryTextChange(newText: String): Boolean {
                         adapter.filter(newText)
                         binding.rvMainTodos.layoutManager?.scrollToPosition(0)
                         return true
@@ -196,24 +226,30 @@ class MainActivity : AppCompatActivity() {
                 })
         }
     }
+
     private fun showLoading(isLoading: Boolean) {
         binding.pbMain.visibility =
             if (isLoading) View.VISIBLE else View.GONE
     }
+
     private fun openProfileActivity() {
         val intent = Intent(applicationContext, ProfileActivity::class.java)
         startActivity(intent)
     }
+
     private fun showComponentNotEmpty(status: Boolean) {
         binding.svMain.visibility =
             if (status) View.VISIBLE else View.GONE
+
         binding.rvMainTodos.visibility =
             if (status) View.VISIBLE else View.GONE
     }
+
     private fun showEmptyError(isError: Boolean) {
         binding.tvMainEmptyError.visibility =
             if (isError) View.VISIBLE else View.GONE
     }
+
     private fun openLoginActivity() {
         val intent = Intent(applicationContext, LoginActivity::class.java)
         intent.flags =
@@ -221,12 +257,21 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
+
     private fun openAddTodoActivity() {
         val intent = Intent(
             this@MainActivity,
             TodoManageActivity::class.java
         )
         intent.putExtra(TodoManageActivity.KEY_IS_ADD, true)
+        launcher.launch(intent)
+    }
+
+    private fun openFavoriteTodoActivity() {
+        val intent = Intent(
+            this@MainActivity,
+            TodoFavoriteActivity::class.java
+        )
         launcher.launch(intent)
     }
 }

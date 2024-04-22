@@ -1,11 +1,12 @@
 package com.ifs21053.delcomtodo.data.repository
 
 import com.google.gson.Gson
-import com.ifs21053.delcomtodo.data.remote.response.DelcomResponse
 import com.ifs21053.delcomtodo.data.remote.retrofit.IApiService
+import com.ifs21053.delcomtodo.data.remote.response.DelcomResponse
 import com.ifs21053.delcomtodo.data.remote.retrofit.MyResult
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
+
 class TodoRepository private constructor(
     private val apiService: IApiService,
 ) {
@@ -33,6 +34,7 @@ class TodoRepository private constructor(
             )
         }
     }
+
     fun putTodo(
         todoId: Int,
         title: String,
@@ -64,6 +66,7 @@ class TodoRepository private constructor(
             )
         }
     }
+
     fun getTodos(
         isFinished: Int?,
     ) = flow {
@@ -83,6 +86,7 @@ class TodoRepository private constructor(
             )
         }
     }
+
     fun getTodo(
         todoId: Int,
     ) = flow {
@@ -102,6 +106,7 @@ class TodoRepository private constructor(
             )
         }
     }
+
     fun deleteTodo(
         todoId: Int,
     ) = flow {
@@ -121,6 +126,7 @@ class TodoRepository private constructor(
             )
         }
     }
+
     companion object {
         @Volatile
         private var INSTANCE: TodoRepository? = null
