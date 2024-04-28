@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.ifs21053.delcomtodo.R
 import com.ifs21053.delcomtodo.data.local.entity.DelcomTodoEntity
 import com.ifs21053.delcomtodo.data.model.DelcomTodo
@@ -23,9 +24,7 @@ class TodoDetailActivity : AppCompatActivity() {
         ViewModelFactory.getInstance(this)
     }
     private var isFavorite: Boolean = false
-
     private var delcomTodo: DelcomTodoEntity? = null
-
     private val launcher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -40,21 +39,17 @@ class TodoDetailActivity : AppCompatActivity() {
         setupView()
         setupAction()
     }
-
     private fun setupView() {
         showComponent(false)
         showLoading(false)
     }
-
     private fun setupAction() {
         val todoId = intent.getIntExtra(KEY_TODO_ID, 0)
         if (todoId == 0) {
             finish()
             return
         }
-
         observeGetTodo(todoId)
-
         binding.appbarTodoDetail.setNavigationOnClickListener {
             val resultIntent = Intent()
             resultIntent.putExtra(KEY_IS_CHANGED, true)
@@ -62,7 +57,6 @@ class TodoDetailActivity : AppCompatActivity() {
             finishAfterTransition()
         }
     }
-
     private fun observeGetTodo(todoId: Int) {
         viewModel.getTodo(todoId).observeOnce { result ->
             when (result) {
@@ -85,13 +79,21 @@ class TodoDetailActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun loadTodo(todo: TodoResponse) {
         showComponent(true)
         binding.apply {
             tvTodoDetailTitle.text = todo.title
             tvTodoDetailDate.text = "Dibuat pada: ${todo.createdAt}"
             tvTodoDetailDesc.text = todo.description
+            if(todo.cover != null){
+                ivTodoDetailCover.visibility = View.VISIBLE
+                Glide.with(this@TodoDetailActivity)
+                    .load(todo.cover)
+                    .placeholder(R.drawable.ic_image_24)
+                    .into(ivTodoDetailCover)
+            }else{
+                ivTodoDetailCover.visibility = View.GONE
+            }
             viewModel.getLocalTodo(todo.id).observeOnce {
                 if(it != null){
                     delcomTodo = it
@@ -204,7 +206,6 @@ class TodoDetailActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun setFavorite(status: Boolean){
         isFavorite = status
         if(status){
@@ -215,7 +216,6 @@ class TodoDetailActivity : AppCompatActivity() {
                 .setImageResource(R.drawable.ic_favorite_border_24)
         }
     }
-
     private fun observeDeleteTodo(todoId: Int) {
         showComponent(false)
         showLoading(true)
@@ -251,17 +251,14 @@ class TodoDetailActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun showLoading(isLoading: Boolean) {
         binding.pbTodoDetail.visibility =
             if (isLoading) View.VISIBLE else View.GONE
     }
-
     private fun showComponent(status: Boolean) {
         binding.llTodoDetail.visibility =
             if (status) View.VISIBLE else View.GONE
     }
-
     companion object {
         const val KEY_TODO_ID = "todo_id"
         const val KEY_IS_CHANGED = "is_changed"

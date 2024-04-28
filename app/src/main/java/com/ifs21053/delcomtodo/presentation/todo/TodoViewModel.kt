@@ -11,26 +11,23 @@ import com.ifs21053.delcomtodo.data.remote.retrofit.MyResult
 import com.ifs21053.delcomtodo.data.repository.LocalTodoRepository
 import com.ifs21053.delcomtodo.data.repository.TodoRepository
 import com.ifs21053.delcomtodo.presentation.ViewModelFactory
-
+import okhttp3.MultipartBody
 class TodoViewModel(
     private val todoRepository: TodoRepository,
     private val localTodoRepository: LocalTodoRepository
 ) : ViewModel() {
-
-    fun getTodo(todoId: Int): LiveData<MyResult<DelcomTodoResponse>>{
+    fun getTodo(todoId: Int): LiveData<MyResult<DelcomTodoResponse>> {
         return todoRepository.getTodo(todoId).asLiveData()
     }
-
     fun postTodo(
         title: String,
         description: String,
-    ): LiveData<MyResult<DataAddTodoResponse>>{
+    ): LiveData<MyResult<DataAddTodoResponse>> {
         return todoRepository.postTodo(
             title,
             description
         ).asLiveData()
     }
-
     fun putTodo(
         todoId: Int,
         title: String,
@@ -44,15 +41,12 @@ class TodoViewModel(
             isFinished,
         ).asLiveData()
     }
-
     fun deleteTodo(todoId: Int): LiveData<MyResult<DelcomResponse>> {
         return todoRepository.deleteTodo(todoId).asLiveData()
     }
-
     fun getLocalTodos(): LiveData<List<DelcomTodoEntity>?> {
         return localTodoRepository.getAllTodos()
     }
-
     fun getLocalTodo(todoId: Int): LiveData<DelcomTodoEntity?> {
         return localTodoRepository.get(todoId)
     }
@@ -62,7 +56,12 @@ class TodoViewModel(
     fun deleteLocalTodo(todo: DelcomTodoEntity) {
         localTodoRepository.delete(todo)
     }
-
+    fun addCoverTodo(
+        todoId: Int,
+        cover: MultipartBody.Part,
+    ): LiveData<MyResult<DelcomResponse>> {
+        return todoRepository.addCoverTodo(todoId, cover).asLiveData()
+    }
     companion object {
         @Volatile
         private var INSTANCE: TodoViewModel? = null
